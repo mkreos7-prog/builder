@@ -1,8 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { classifyIntent } from '../lib/intent';
 
-// Mock fetch for LLM calls
-global.fetch = vi.fn();
+const originalFetch = global.fetch;
+
+beforeAll(() => {
+  global.fetch = vi.fn();
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('Intent Classifier', () => {
   beforeEach(() => {
@@ -45,13 +52,21 @@ describe('Intent Classifier', () => {
 
     it('should classify modification requests', async () => {
       const result = await classifyIntent('Change the header to blue');
-      // These will fall back to LLM or UNKNOWN without API key
-      expect(['MODIFY_PROJECT', 'ADD_FEATURE', 'FIX_BUG', 'REFACTOR', 'UNKNOWN']).toContain(result.action);
+      expect(result.action).toBe('MODIFY_PROJECT');
+      expect(result.requiresProjectAction).toBe(true);
+      expect(result.requiresSandbox).toBe(false);
+    });
+
+    it('should classify add feature requests', async () => {
+      const result = await classifyIntent('Add a contact form');
+      expect(result.action).toBe('ADD_FEATURE');
+      expect(result.requiresProjectAction).toBe(true);
     });
 
     it('should classify bug fix requests', async () => {
-      const result = await classifyIntent('Fix the login bug');
-      expect(['FIX_BUG', 'MODIFY_PROJECT', 'UNKNOWN']).toContain(result.action);
+      const result = await classifyIntent('Fix the login error');
+      expect(result.action).toBe('FIX_BUG');
+      expect(result.requiresProjectAction).toBe(true);
     });
 
     it('should classify refactor requests', async () => {

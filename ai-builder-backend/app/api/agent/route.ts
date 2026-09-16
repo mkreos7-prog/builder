@@ -114,6 +114,21 @@ export async function POST(req: Request) {
             payload: { delta: chunk },
           };
         }
+      } else if (intent.action === 'INSPECT') {
+        // Sprint 0 stub for project inspection
+        const fileList = body.history ? '(project state inspection)' : '(no files)';
+        const inspectMessage = 
+          `Here is the current state of your project:\n` +
+          `- Files: ${fileList}\n` +
+          `- Framework: nextjs\n` +
+          `To make changes, describe what you want to modify.`;
+        
+        yield {
+          type: 'text_delta',
+          id: eventId++,
+          timestamp: new Date().toISOString(),
+          payload: { delta: inspectMessage },
+        };
       } else if (intent.requiresProjectAction) {
         // Project action mode - generate files
         systemPrompt = `You are an expert full-stack engineer. Generate complete, working files for the user's request.

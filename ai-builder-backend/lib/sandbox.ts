@@ -1,14 +1,8 @@
+import { Sandbox } from '@vercel/sandbox';
 import type { GeneratedFile } from './types';
 
-// Vercel Sandbox wrapper
-// NOTE: The @vercel/sandbox package doesn't exist in npm yet.
-// This is a placeholder implementation showing the intended interface.
-// Replace with actual Vercel Sandbox SDK when available, or use an alternative like E2B.
-// 
-// For Sprint 0 testing, this will throw errors when sandbox operations are attempted.
-// The rest of the backend works without actual sandbox integration.
-
 interface SandboxInstance {
+  sandbox: Sandbox;
   sandboxId: string;
   previewUrl: string;
 }
@@ -16,7 +10,7 @@ interface SandboxInstance {
 const sandboxCache = new Map<string, SandboxInstance>();
 
 function getSandboxName(projectId: string): string {
-  return `sbx-${projectId.replace(/[^a-z0-9]/g, '').slice(0, 24)}`;
+  return `sbx-${projectId.replace(/[^a-z0-9]/g, '').slice(0, 24).toLowerCase()}`;
 }
 
 export async function createOrGetSandbox(projectId: string): Promise<{
@@ -25,50 +19,43 @@ export async function createOrGetSandbox(projectId: string): Promise<{
 }> {
   const cached = sandboxCache.get(projectId);
   if (cached) {
-    return cached;
+    return {
+      sandboxId: cached.sandboxId,
+      previewUrl: cached.previewUrl,
+    };
   }
 
   const vercelToken = process.env.VERCEL_TOKEN;
-  const vercelProjectId = process.env.VERCEL_PROJECT_ID;
-  const vercelTeamId = process.env.VERCEL_TEAM_ID;
-
-  if (!vercelToken || !vercelProjectId) {
-    throw new Error('Vercel credentials not configured');
+  
+  if (!vercelToken) {
+    throw new Error('VERCEL_TOKEN not configured');
   }
 
   try {
-    // Import dynamically to handle SDK presence
-    // NOTE: @vercel/sandbox package doesn't exist - throwing error for Sprint 0
-    throw new Error(
-      '@vercel/sandbox package not available. ' +
-      'Use E2B (e2b.dev) or wait for Vercel Sandbox public release. ' +
-      'The rest of the backend works without actual sandbox integration.'
-    );
-    
-    /* Intended implementation when SDK is available:
-    const { Sandbox } = await import('@vercel/sandbox');
-    
     const sandboxName = getSandboxName(projectId);
     
     // Create or get existing sandbox
-    const sandbox = await Sandbox.create({
+    const sandbox = await Sandbox.getOrCreate({
       name: sandboxName,
-      token: vercelToken,
-      projectId: vercelProjectId,
-      teamId: vercelTeamId,
+      ports: [3000],
+      timeout: 5 * 60 * 1000, // 5 minutes
     });
 
-    // Get preview URL (default to port 3000)
-    const previewUrl = await sandbox.getPreviewUrl?.(3000) || `https://${sandboxName}.vercel.app`;
+    // Get preview URL for port 3000
+    const previewUrl = sandbox.domain(3000);
 
     const instance: SandboxInstance = {
-      sandboxId: sandbox.id || sandboxName,
+      sandbox,
+      sandboxId: sandbox.name,
       previewUrl,
     };
 
     sandboxCache.set(projectId, instance);
-    return instance;
-    */
+    
+    return {
+      sandboxId: instance.sandboxId,
+      previewUrl: instance.previewUrl,
+    };
   } catch (error) {
     throw new Error(
       `Failed to create sandbox: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -87,42 +74,34 @@ export async function writeFilesToSandbox(
   }
 
   try {
-    // NOTE: @vercel/sandbox package doesn't exist - throwing error for Sprint 0
-    throw new Error(
-      '@vercel/sandbox package not available. ' +
-      'Sandbox operations are not functional in Sprint 0 without the actual SDK.'
+    const { sandbox } = instance;
+    
+    // Write files to sandbox using the batch writeFiles API
+    await sandbox.writeFiles(
+      files.map(file => ({
+        path: file.path.startsWith('/') ? file.path : `/${file.path}`,
+        content: file.content,
+      }))
     );
-    
-    /* Intended implementation when SDK is available:
-    const { Sandbox } = await import('@vercel/sandbox');
-    
-    // Get sandbox instance
-    const sandbox = await Sandbox.get(instance.sandboxId);
-    
-    if (!sandbox) {
-      throw new Error('Sandbox not found');
-    }
-
-    // Write files to sandbox
-    for (const file of files) {
-      await sandbox.writeFile?.(file.path, file.content);
-    }
 
     // Check if package.json exists - if so, run install and dev
-    const hasPackageJson = files.some(f => f.path === 'package.json');
+    const hasPackageJson = files.some(f => f.path === 'package.json' || f.path === '/package.json');
     
     if (hasPackageJson) {
       // Install dependencies
-      await sandbox.exec?.('npm install');
+      console.log('[Sandbox] Running npm install...');
+      await sandbox.runCommand('npm', ['install']);
       
-      // Start dev server (non-blocking)
-      sandbox.exec?.('npm run dev').catch(() => {
-        // Dev server will run in background
+      // Start dev server in detached mode (non-blocking)
+      console.log('[Sandbox] Starting npm run dev...');
+      await sandbox.runCommand({
+        cmd: 'npm',
+        args: ['run', 'dev'],
+        detached: true,
       });
     } else {
-      // Static files only - start a simple server
-      const serverCode = `
-const http = require('http');
+      // Static files only - write and run a simple HTTP server
+      const serverCode = `const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -136,7 +115,20 @@ const server = http.createServer((req, res) => {
       res.end('Not found');
       return;
     }
-    res.writeHead(200);
+    
+    // Guess content type
+    const ext = path.extname(fullPath);
+    const contentTypes = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'application/javascript',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.gif': 'image/gif',
+    };
+    
+    res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'text/plain' });
     res.end(data);
   });
 });
@@ -144,12 +136,18 @@ const server = http.createServer((req, res) => {
 server.listen(3000, () => console.log('Server running on port 3000'));
 `;
       
-      await sandbox.writeFile?.('server.js', serverCode);
-      sandbox.exec?.('node server.js').catch(() => {
-        // Server will run in background
+      await sandbox.writeFiles([
+        { path: '/server.js', content: serverCode },
+      ]);
+      
+      // Start the server in detached mode
+      console.log('[Sandbox] Starting static server...');
+      await sandbox.runCommand({
+        cmd: 'node',
+        args: ['server.js'],
+        detached: true,
       });
     }
-    */
   } catch (error) {
     throw new Error(
       `Failed to write files to sandbox: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -165,22 +163,11 @@ export async function stopSandbox(projectId: string): Promise<void> {
   }
 
   try {
-    // NOTE: @vercel/sandbox package doesn't exist
-    throw new Error('@vercel/sandbox package not available');
-    
-    /* Intended implementation when SDK is available:
-    const { Sandbox } = await import('@vercel/sandbox');
-    
-    const sandbox = await Sandbox.get(instance.sandboxId);
-    
-    if (sandbox) {
-      await sandbox.stop?.();
-    }
-    */
-    
+    const { sandbox } = instance;
+    await sandbox.stop();
     sandboxCache.delete(projectId);
   } catch (error) {
-    console.error('Failed to stop sandbox:', error);
+    console.error('[Sandbox] Failed to stop sandbox:', error);
     // Clean up cache anyway
     sandboxCache.delete(projectId);
   }

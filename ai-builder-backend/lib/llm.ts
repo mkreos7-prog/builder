@@ -10,9 +10,12 @@ interface Message {
   content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 }
 
+const MAX_CONTINUATIONS = 2;
+
 const GEMINI_MODELS = [
-  'gemini-2.0-flash-exp',
-  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
 ];
 
 const GROQ_MODELS = [
@@ -21,7 +24,8 @@ const GROQ_MODELS = [
 
 async function* streamGemini(
   messages: Message[],
-  modelIndex: number = 0
+  modelIndex: number = 0,
+  continuationCount: number = 0
 ): AsyncGenerator<string, void, void> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   
@@ -57,7 +61,7 @@ async function* streamGemini(
     if (!response.ok) {
       if (response.status === 429 || response.status === 503) {
         // Rate limited or service unavailable - try next model
-        yield* streamGemini(messages, modelIndex + 1);
+        yield* streamGemini(messages, modelIndex + 1, continuationCount);
         return;
       }
       throw new Error(`Gemini API error: ${response.status}`);
@@ -99,17 +103,22 @@ async function* streamGemini(
 
             // Handle continuation if response was cut off
             if (finishReason === 'length') {
-              console.log('Response truncated, continuing...');
+              if (continuationCount >= MAX_CONTINUATIONS) {
+                console.warn('[LLM] Max continuations reached, stopping.');
+                return;
+              }
+              
+              console.log(`[LLM] Response truncated, continuing (${continuationCount + 1}/${MAX_CONTINUATIONS})...`);
               const continuationMessages: Message[] = [
                 ...messages,
                 { role: 'assistant', content: fullContent },
                 { role: 'user', content: 'Continue exactly where you left off. Do not repeat content.' },
               ];
-              yield* streamGemini(continuationMessages, 0);
+              yield* streamGemini(continuationMessages, modelIndex, continuationCount + 1);
               return;
             }
           } catch (e) {
-            // Skip invalid JSON lines
+            console.warn('[LLM] Skipped malformed SSE chunk:', String(e).slice(0, 120));
           }
         }
       }
@@ -117,15 +126,18 @@ async function* streamGemini(
   } catch (error) {
     if (modelIndex < GEMINI_MODELS.length - 1) {
       // Try next Gemini model
-      yield* streamGemini(messages, modelIndex + 1);
+      yield* streamGemini(messages, modelIndex + 1, continuationCount);
     } else {
       // All Gemini models failed, try Groq
-      yield* streamGroq(messages);
+      yield* streamGroq(messages, continuationCount);
     }
   }
 }
 
-async function* streamGroq(messages: Message[]): AsyncGenerator<string, void, void> {
+async function* streamGroq(
+  messages: Message[],
+  continuationCount: number = 0
+): AsyncGenerator<string, void, void> {
   const groqApiKey = process.env.GROQ_API_KEY;
   
   if (!groqApiKey) {
@@ -173,6 +185,7 @@ async function* streamGroq(messages: Message[]): AsyncGenerator<string, void, vo
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let fullContent = '';
 
   while (true) {
     const { done, value } = await reader.read();
@@ -192,12 +205,31 @@ async function* streamGroq(messages: Message[]): AsyncGenerator<string, void, vo
         try {
           const parsed = JSON.parse(data);
           const delta = parsed.choices?.[0]?.delta?.content;
+          const finishReason = parsed.choices?.[0]?.finish_reason;
 
           if (delta) {
+            fullContent += delta;
             yield delta;
           }
+
+          // Handle continuation if response was cut off
+          if (finishReason === 'length') {
+            if (continuationCount >= MAX_CONTINUATIONS) {
+              console.warn('[LLM] Groq: max continuations reached, stopping.');
+              return;
+            }
+            
+            console.log(`[LLM] Groq: response truncated, continuing (${continuationCount + 1}/${MAX_CONTINUATIONS})...`);
+            const continuationMessages: Message[] = [
+              ...messages,
+              { role: 'assistant', content: fullContent },
+              { role: 'user', content: 'Continue exactly where you left off. Do not repeat content.' },
+            ];
+            yield* streamGroq(continuationMessages, continuationCount + 1);
+            return;
+          }
         } catch (e) {
-          // Skip invalid JSON lines
+          console.warn('[LLM] Skipped malformed SSE chunk:', String(e).slice(0, 120));
         }
       }
     }
