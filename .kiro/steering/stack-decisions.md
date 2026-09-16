@@ -46,8 +46,8 @@ These decisions are final for initial release:
 - Options: Vercel / Netlify / Cloudflare Pages / custom infrastructure
 
 **Billing Provider**
-- Likely: Stripe
-- Alternative: LemonSqueezy
+- Primary candidate: Stripe (final decision deferred to implementation phase)
+- Rejected for v1: LemonSqueezy
 
 ## v2 Evaluation (post-launch)
 

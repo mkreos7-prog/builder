@@ -72,13 +72,7 @@ For **move/delete**:
 See ./schemas.ts for FileOpResult.
 
 Brief:
-```typescript
-interface FileOpResult {
-  success: boolean
-  path: string
-  error?: string
-}
-```
+- FileOpResult: success, path, error (optional)
 
 ## Anti-Patterns
 

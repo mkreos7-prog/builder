@@ -119,7 +119,7 @@ Are >5 files changed?
   No  → Continue
 
 Are .ts/.tsx files changed?
-  Yes → Level 2 (Type Check Affected)
+  Yes → Level 2 (project-level tsc --noEmit --incremental, filtered to changes)
   No  → Continue
 
 Are .js/.jsx files changed?

@@ -134,6 +134,8 @@ Manual rollback:
 
 Never auto-rollback without one of the above triggers.
 
+## Rollback Procedure
+
 1. Identify previous successful deployment
 2. Redeploy artifacts from that deployment
 3. Verify health check passes
