@@ -124,7 +124,7 @@ Summary of SandboxProvider methods:
 **Docker-in-Sandbox**
 - For full-stack projects needing database + backend + frontend
 - Compose file defines services
-- Port forwarding for preview URLs
+- Preview URLs are obtained via SandboxProvider.getPreviewUrl(sandboxId). The provider handles port mapping internally. The agent does not configure ports directly.
 
 ## Persistence Rule
 

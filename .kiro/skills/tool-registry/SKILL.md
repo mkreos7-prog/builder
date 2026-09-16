@@ -203,6 +203,14 @@ function validateToolDefinition(tool: ToolDefinition): void {
 - [ ] Side effects list is complete (may be empty array)
 - [ ] At least one example provided
 
+## Enforcement
+
+The tool executor MUST verify the caller context:
+
+- Tools with EXECUTE permission cannot be invoked by an LLM tool-call.
+- The Brain (or the owning skill's orchestrator) is the only allowed caller.
+- If an EXECUTE tool is requested by the LLM directly, the executor MUST reject the call with error code EXECUTE_VIA_LLM_FORBIDDEN.
+
 ## Tool Permissions
 
 - **WRITE**: Register new tools (modifies registry)

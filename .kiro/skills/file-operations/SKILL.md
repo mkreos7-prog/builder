@@ -45,7 +45,7 @@ For **move/delete**:
 - Read source file content
 - Write to target path
 - Delete source file
-- Atomically if the filesystem supports it
+- If the target filesystem supports atomic rename (POSIX rename), use it. Otherwise, perform read + write + delete, and record the operation in the checkpoint so it can be replayed on crash.
 
 **copy_file(from, to)**
 - Read source file content

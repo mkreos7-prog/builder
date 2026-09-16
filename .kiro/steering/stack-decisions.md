@@ -35,11 +35,11 @@ These decisions are final for initial release:
 
 **Authentication**
 - Options: Clerk / Auth.js / custom
-- Decision criteria: ease of integration, pricing, social providers
+- Criteria: integration ease, pricing, social providers
 
 **Object Storage**
 - Options: AWS S3 / Cloudflare R2
-- Decision criteria: egress costs, latency, SDK quality
+- Criteria: egress costs, latency
 
 **Deployment Target**
 - Where do user projects deploy?
@@ -47,7 +47,7 @@ These decisions are final for initial release:
 
 **Billing Provider**
 - Likely: Stripe
-- Alternative: LemonSqueezy for simpler tax handling
+- Alternative: LemonSqueezy
 
 ## v2 Evaluation (post-launch)
 
@@ -55,9 +55,3 @@ These decisions are final for initial release:
 - E2B: 24-hour sessions, ~1s resume, filesystem + memory preserved
 - Blaxel: perpetual standby mode, sub-25ms resume
 - Daytona: sub-90ms cold start
-
-Evaluate based on:
-- Resume latency (critical for UX)
-- Session duration limits
-- Pricing at scale
-- Multi-region availability

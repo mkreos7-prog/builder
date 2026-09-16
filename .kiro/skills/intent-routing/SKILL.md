@@ -38,7 +38,8 @@ Run on **every user message** before any other skill. This determines whether th
 - `DESIGN_CHANGE`: Make it look better, change colors
 - `DEPENDENCY_CHANGE`: Add library, update packages
 - `RUN_COMMAND`: Run build, execute tests
-- `TEST`: Write tests, check coverage
+- `TEST_WRITE`: Write new tests (sandbox: false)
+- `TEST_RUN`: Run test suite (sandbox: true)
 - `BUILD`: Compile, bundle, prepare for production
 - `DEPLOY`: Push to production, publish
 - `ROLLBACK`: Revert changes, undo deployment
@@ -68,7 +69,7 @@ type Intent =
   | "GREETING" | "QUESTION" | "EXPLANATION" | "PROJECT_STATUS"
   | "CREATE_PROJECT" | "MODIFY_PROJECT" | "ADD_FEATURE" | "REMOVE_FEATURE"
   | "DEBUG" | "REFACTOR" | "DESIGN_CHANGE" | "DEPENDENCY_CHANGE"
-  | "RUN_COMMAND" | "TEST" | "BUILD" | "DEPLOY" | "ROLLBACK"
+  | "RUN_COMMAND" | "TEST_WRITE" | "TEST_RUN" | "BUILD" | "DEPLOY" | "ROLLBACK"
   | "IMPORT_PROJECT"
 ```
 
