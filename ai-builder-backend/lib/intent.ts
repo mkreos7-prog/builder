@@ -221,7 +221,7 @@ Respond ONLY with JSON: {"action": "...", "confidence": 0.0-1.0}`;
           'Authorization': `Bearer ${geminiApiKey}`,
         },
         body: JSON.stringify({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.6-flash',
           messages: [
             { role: 'user', content: prompt }
           ],

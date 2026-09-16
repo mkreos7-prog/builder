@@ -26,9 +26,19 @@ export async function createOrGetSandbox(projectId: string): Promise<{
   }
 
   const vercelToken = process.env.VERCEL_TOKEN;
-  
+  const vercelProjectId = process.env.VERCEL_PROJECT_ID;
+  const vercelTeamId = process.env.VERCEL_TEAM_ID;
+
   if (!vercelToken) {
-    throw new Error('VERCEL_TOKEN not configured');
+    throw new Error(
+      'VERCEL_TOKEN not configured. Set it in .env.local to use Vercel Sandbox.'
+    );
+  }
+
+  if (!vercelProjectId) {
+    throw new Error(
+      'VERCEL_PROJECT_ID not configured. Set it in .env.local to use Vercel Sandbox.'
+    );
   }
 
   try {
@@ -38,7 +48,10 @@ export async function createOrGetSandbox(projectId: string): Promise<{
     const sandbox = await Sandbox.getOrCreate({
       name: sandboxName,
       ports: [3000],
-      timeout: 20 * 60 * 1000, // 20 minutes
+      timeout: 20 * 60 * 1000,
+      token: vercelToken,
+      projectId: vercelProjectId,
+      teamId: vercelTeamId, // optional; undefined is fine
     });
 
     // Get preview URL for port 3000
