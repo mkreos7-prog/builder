@@ -26,8 +26,20 @@ export type EventType =
   | "error"
 
 export interface AgentStatusPayload {
-  status: "idle" | "thinking" | "planning" | "acting" | "verifying" | "error"
+  status:
+    | "idle"
+    | "understanding"
+    | "observing"
+    | "planning"
+    | "validating"
+    | "acting"
+    | "verifying"
+    | "repairing"
+    | "paused"
+    | "error"
+    | "completed"
   message: string
+  reason?: string
 }
 
 export interface ToolCallPayload {

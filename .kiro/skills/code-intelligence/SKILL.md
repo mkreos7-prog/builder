@@ -86,27 +86,12 @@ Do NOT use for:
 
 ## Output Schema
 
-```typescript
-interface CodeGraph {
-  files: Record<string, FileNode>
-  symbols: Record<string, SymbolNode>
-}
+See ./schemas.ts for CodeGraph, FileNode, SymbolNode.
 
-interface FileNode {
-  path: string
-  exports: string[] // symbol IDs
-  imports: Array<{ symbol: string, from: string }>
-}
-
-interface SymbolNode {
-  id: string
-  name: string
-  kind: "function" | "class" | "const" | "type" | "interface"
-  definedIn: string // file path
-  usedBy: string[] // file paths
-  isExported: boolean
-}
-```
+Brief:
+- CodeGraph: files (map of FileNode), symbols (map of SymbolNode)
+- FileNode: path, exports[], imports[]
+- SymbolNode: id, name, kind, definedIn, usedBy[], isExported
 
 ## Anti-Patterns
 

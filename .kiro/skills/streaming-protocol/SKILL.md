@@ -47,6 +47,8 @@ Event types:
 
 See ./schemas.ts for full EventType union and all payload interfaces.
 
+Agent status values mirror the states defined in agent-loop/SKILL.md. Keep both enums in sync when either changes.
+
 ## Transport
 
 **Server → Client: Server-Sent Events (SSE)**

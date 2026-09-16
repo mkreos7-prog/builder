@@ -54,6 +54,7 @@ interface IntentClassification {
   requires_project_action: boolean
   requires_sandbox: boolean
   requires_deployment_pipeline: boolean
+  requires_project_discovery: boolean
   confidence: number // 0.0 - 1.0
   entities: {
     project_id?: string
@@ -71,6 +72,11 @@ type Intent =
   | "IMPORT_PROJECT"
 ```
 
+requires_project_discovery is true when:
+  - intent is IMPORT_PROJECT
+  - intent is CREATE_PROJECT
+  - intent is MODIFY_PROJECT and no ProjectProfile exists for this project in the current session
+
 ## Anti-Patterns
 
 ❌ Starting sandbox for "What is React?"
@@ -85,6 +91,7 @@ type Intent =
 - [ ] `requires_sandbox` is true for: RUN_COMMAND, TEST_RUN, BUILD, and CREATE_PROJECT when a build or dev server is requested.
 - [ ] DEPLOY always uses requires_deployment_pipeline: true and requires_sandbox: false.
 - [ ] requires_sandbox is false for: GREETING, QUESTION, EXPLANATION, PROJECT_STATUS, MODIFY_PROJECT (unless a command run is part of the task), ADD_FEATURE (unless sandbox work is required), REMOVE_FEATURE, DEBUG (unless runtime reproduction is needed), REFACTOR, DESIGN_CHANGE, DEPENDENCY_CHANGE (unless install is required).
+- [ ] requires_project_discovery is true only when project state is unknown or session-fresh
 - [ ] Entities extracted correctly (file paths, dependencies, etc.)
 
 ## Tool Permissions

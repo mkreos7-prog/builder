@@ -48,3 +48,14 @@ Use optimistic concurrency control:
 - Checkpoint before batch operations
 
 Concurrent edits or stale reads cause data loss. Hash validation prevents this.
+
+## Checkpoint Semantics
+
+A **batch** is defined as 2 or more file modifications in a single agent turn.
+
+Rules:
+
+- One checkpoint is created BEFORE the first write of a batch.
+- Do NOT create a checkpoint per file inside a batch.
+- Single-file edits do NOT create a checkpoint (use expected_hash only).
+- Delete and move operations always create a checkpoint, regardless of batch size.

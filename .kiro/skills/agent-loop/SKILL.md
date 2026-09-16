@@ -26,6 +26,8 @@ Do NOT run for:
 UNDERSTAND → OBSERVE → PLAN → VALIDATE → ACT → OBSERVE → VERIFY
 ```
 
+Every state transition MUST emit an agent.status stream event using the enum defined in streaming-protocol/schemas.ts. Keep the state names identical on both sides.
+
 ### 1. UNDERSTAND
 - Parse user request into concrete requirements
 - Identify affected files and dependencies
@@ -53,9 +55,27 @@ UNDERSTAND → OBSERVE → PLAN → VALIDATE → ACT → OBSERVE → VERIFY
 ### 5. ACT
 - Execute plan steps sequentially
 - Use patch-editing skill for file modifications
-- Checkpoint before each write batch
+- Create one checkpoint before the first write of a batch (see steering/implementation-rules.md for batch definition)
 - Log each action with timestamp
-- After MAX_ACTIONS_PER_TURN actions in a single turn, stop, checkpoint, and return control to the user with a progress summary
+
+### Action Limit Handling
+
+When MAX_ACTIONS_PER_TURN is reached in a single turn:
+
+1. Finish the current atomic action. Never split an action across turns.
+2. Run Level 1 verification (syntax check only).
+3. Create a checkpoint tagged `auto-pause`.
+4. Emit agent.status event with status="paused", reason="action_limit".
+5. Wait for user "continue" or "abort".
+
+On "continue":
+  - Restore from the `auto-pause` checkpoint.
+  - Resume the loop with a fresh action counter.
+  - Do NOT re-trigger MAX_ACTIONS_PER_TURN unless the user hits it again.
+
+On "abort":
+  - Offer rollback to the last user-initiated checkpoint (if any).
+  - Do NOT auto-rollback without explicit confirmation.
 
 ### 6. OBSERVE (post-action)
 - Read modified files to confirm changes

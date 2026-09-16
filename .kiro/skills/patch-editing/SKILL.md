@@ -47,9 +47,10 @@ Do NOT use for:
 - Confirm no unintended changes
 
 ### 4. CHECKPOINT
-- If this is part of a batch (>1 file):
-  - Create checkpoint before applying
-  - Store file hashes in checkpoint metadata
+- If this is the FIRST file in a batch (see steering/implementation-rules.md):
+  - Create one checkpoint before applying
+  - Store file hashes of all files in the batch in checkpoint metadata
+- Do NOT create a checkpoint for single-file edits.
 
 ### 5. APPLY
 - Send patch with `expected_hash`
