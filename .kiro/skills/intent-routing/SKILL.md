@@ -82,7 +82,7 @@ type Intent =
 
 - [ ] Intent matches actual user request
 - [ ] `requires_project_action` is false for all conversational intents
-- [ ] `requires_sandbox` is true for: RUN_COMMAND, TEST, BUILD, and CREATE_PROJECT when a build or dev server is requested.
+- [ ] `requires_sandbox` is true for: RUN_COMMAND, TEST_RUN, BUILD, and CREATE_PROJECT when a build or dev server is requested.
 - [ ] DEPLOY always uses requires_deployment_pipeline: true and requires_sandbox: false.
 - [ ] requires_sandbox is false for: GREETING, QUESTION, EXPLANATION, PROJECT_STATUS, MODIFY_PROJECT (unless a command run is part of the task), ADD_FEATURE (unless sandbox work is required), REMOVE_FEATURE, DEBUG (unless runtime reproduction is needed), REFACTOR, DESIGN_CHANGE, DEPENDENCY_CHANGE (unless install is required).
 - [ ] Entities extracted correctly (file paths, dependencies, etc.)
