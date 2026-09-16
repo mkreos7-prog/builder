@@ -1,6 +1,6 @@
 ---
 name: patch-editing
-description: Use when modifying existing files. Triggers on all file edit operations during project manipulation.
+description: Use when modifying content inside an existing file. Triggers on edits to existing .ts, .tsx, .js, .jsx, .json, .css, or .html files. Do NOT trigger for file creation, move, copy, or delete — those use file-operations.
 globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json", "**/*.css", "**/*.html"]
 alwaysApply: false
 ---

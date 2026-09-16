@@ -1,7 +1,7 @@
 ---
 name: deployment
 description: Use when deploying user projects to production. Triggers when user requests publish or deploy.
-globs: []
+globs: ["**/package.json", "**/next.config.*", "**/vite.config.*", "**/astro.config.*", "**/vercel.json", "**/Dockerfile"]
 alwaysApply: false
 ---
 

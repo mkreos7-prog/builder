@@ -1,7 +1,7 @@
 ---
 name: sandbox-lifecycle
-description: Use when executing code, running builds, or testing projects. Triggers when requires_sandbox flag is true.
-globs: []
+description: Use when running commands inside a project — installing dependencies, building, testing, starting a dev server, or any user-requested shell command. Triggers when a task requires executing code, not just reading or editing it.
+globs: ["**/package.json", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock", "**/bun.lockb", "**/Dockerfile", "**/docker-compose.yml", "**/docker-compose.yaml"]
 alwaysApply: false
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: agent-loop
-description: Use for all multi-step project modifications. Triggers when intent classification sets requires_project_action to true.
-globs: []
+description: Use for any task that modifies project files across multiple steps — adding features, fixing bugs, refactoring, dependency changes. Triggers after intent-routing classifies a request as a project manipulation task.
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.astro", "**/*.vue", "**/package.json"]
 alwaysApply: false
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: verification
 description: Use after code changes to verify correctness. Triggers after file modifications are complete.
-globs: []
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/package.json", "**/tsconfig.json"]
 alwaysApply: false
 ---
 

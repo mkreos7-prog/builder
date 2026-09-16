@@ -1,7 +1,7 @@
 ---
 name: file-operations
 description: Use when creating, moving, copying, or deleting files in a project. Triggers on new file creation, file move, file rename, or file deletion requests.
-globs: []
+globs: ["**/*"]
 alwaysApply: false
 ---
 
