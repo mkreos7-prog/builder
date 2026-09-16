@@ -38,7 +38,7 @@ export async function createOrGetSandbox(projectId: string): Promise<{
     const sandbox = await Sandbox.getOrCreate({
       name: sandboxName,
       ports: [3000],
-      timeout: 5 * 60 * 1000, // 5 minutes
+      timeout: 20 * 60 * 1000, // 20 minutes
     });
 
     // Get preview URL for port 3000
@@ -90,15 +90,35 @@ export async function writeFilesToSandbox(
     if (hasPackageJson) {
       // Install dependencies
       console.log('[Sandbox] Running npm install...');
-      await sandbox.runCommand('npm', ['install']);
+      await sandbox.runCommand({
+        cmd: 'npm',
+        args: ['install'],
+        cwd: '/',
+      });
       
       // Start dev server in detached mode (non-blocking)
       console.log('[Sandbox] Starting npm run dev...');
       await sandbox.runCommand({
         cmd: 'npm',
-        args: ['run', 'dev'],
+        args: ['run', 'dev', '--', '-p', '3000'],
+        cwd: '/',
         detached: true,
       });
+      
+      // Poll the preview URL until it responds or timeout (max 15s)
+      const previewUrl = instance.previewUrl;
+      for (let i = 0; i < 30; i++) {
+        try {
+          const res = await fetch(previewUrl, { method: 'GET' });
+          if (res.status < 500) {
+            console.log(`[Sandbox] Preview ready after ${i * 500}ms`);
+            break;
+          }
+        } catch {
+          // Server not ready yet — keep polling
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
     } else {
       // Static files only - write and run a simple HTTP server
       const serverCode = `const http = require('http');
@@ -145,8 +165,24 @@ server.listen(3000, () => console.log('Server running on port 3000'));
       await sandbox.runCommand({
         cmd: 'node',
         args: ['server.js'],
+        cwd: '/',
         detached: true,
       });
+      
+      // Poll the preview URL until it responds or timeout (max 15s)
+      const previewUrl = instance.previewUrl;
+      for (let i = 0; i < 30; i++) {
+        try {
+          const res = await fetch(previewUrl, { method: 'GET' });
+          if (res.status < 500) {
+            console.log(`[Sandbox] Preview ready after ${i * 500}ms`);
+            break;
+          }
+        } catch {
+          // Server not ready yet — keep polling
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
     }
   } catch (error) {
     throw new Error(

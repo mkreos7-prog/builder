@@ -71,7 +71,9 @@ describe('Intent Classifier', () => {
 
     it('should classify refactor requests', async () => {
       const result = await classifyIntent('Refactor the authentication code');
-      expect(['REFACTOR', 'MODIFY_PROJECT', 'UNKNOWN']).toContain(result.action);
+      expect(result.action).toBe('REFACTOR');
+      expect(result.requiresProjectAction).toBe(true);
+      expect(result.requiresSandbox).toBe(false);
     });
   });
 
