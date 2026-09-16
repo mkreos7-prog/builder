@@ -19,6 +19,10 @@ Do NOT use for:
 - Calling existing tools
 - Modifying tool implementations (use regular code editing)
 
+## Single Source of Truth
+
+The canonical tool list lives in steering/tools.md. When registering a new tool, also update that file. When modifying a tool's permission class, update both this skill's example AND steering/tools.md.
+
 ## Tool Schema Format
 
 Every tool must be defined using JSON Schema and include metadata.

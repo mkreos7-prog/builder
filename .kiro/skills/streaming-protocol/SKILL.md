@@ -109,6 +109,16 @@ Server:
 3. Replay missed events
 4. Continue streaming new events
 
+## Event Retention
+
+- Events are stored in a Redis Stream keyed by session_id.
+- Retention: 1 hour OR 10,000 events, whichever is reached first.
+- Events beyond this window are NOT replayable.
+- If client requests a Last-Event-ID older than the retention window, the server MUST:
+  1. Send a `stream.resync_required` event with the current server timestamp.
+  2. Close the connection after the resync event.
+- Client on receiving `stream.resync_required` MUST re-fetch full state via REST and open a new stream without Last-Event-ID.
+
 ## Backpressure Handling
 
 When event queue grows faster than network can send:

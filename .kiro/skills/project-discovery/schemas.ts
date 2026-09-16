@@ -14,8 +14,16 @@ export interface ProjectProfile {
     directories: string[]
   }
   entryPoints: string[]
-  routes: Array<{ path: string, file: string }>
+  routes: Route[]
+  routingSource: "filesystem" | "client-side-router" | "unknown"
   buildCommand: string
   devCommand: string
   outputDir: string
+}
+
+export interface Route {
+  path: string
+  file: string
+  type: "static" | "dynamic" | "catch-all"
+  params?: string[]
 }

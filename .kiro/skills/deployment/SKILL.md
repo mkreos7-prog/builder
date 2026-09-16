@@ -118,9 +118,21 @@ Each project deployment is completely isolated:
 - Deployment environment cannot access internal networks
 - Egress restricted to public internet + deployment target API
 
-## Rollback
+## Rollback Triggers
 
-**Trigger**: User requests rollback or health check fails
+Automatic rollback:
+  - Triggers ONLY on post-deploy health check failure.
+  - Must occur within 5 minutes of the initial deploy.
+  - Emits `deployment.rollback.auto` event.
+  - Never auto-rollback more than one version back.
+  - Never auto-rollback if the failed deploy was itself a rollback.
+
+Manual rollback:
+  - Triggers on explicit user "rollback" intent.
+  - User must specify target version OR accept the most recent successful deployment.
+  - Emits `deployment.rollback.manual` event.
+
+Never auto-rollback without one of the above triggers.
 
 1. Identify previous successful deployment
 2. Redeploy artifacts from that deployment

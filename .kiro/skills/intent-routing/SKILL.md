@@ -77,6 +77,16 @@ requires_project_discovery is true when:
   - intent is CREATE_PROJECT
   - intent is MODIFY_PROJECT and no ProjectProfile exists for this project in the current session
 
+## Entities Are Hints, Not Ground Truth
+
+The `entities` field is a best-effort extraction from the user message. LLMs may hallucinate file paths or project IDs.
+
+Rules:
+
+- Never use an extracted file_path without verifying it via a filesystem read first.
+- Never use an extracted project_id without verifying it exists in the database.
+- If confidence < 0.7, treat entities as empty and let downstream skills do the discovery.
+
 ## Anti-Patterns
 
 ❌ Starting sandbox for "What is React?"

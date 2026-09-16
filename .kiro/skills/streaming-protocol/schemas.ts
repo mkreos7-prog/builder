@@ -24,6 +24,7 @@ export type EventType =
   | "build.complete"
   | "llm.token"
   | "error"
+  | "stream.resync_required"
 
 export interface AgentStatusPayload {
   status:
@@ -78,4 +79,9 @@ export interface BuildErrorPayload {
 export interface LLMTokenPayload {
   token: string
   model: string
+}
+
+export interface StreamResyncRequiredPayload {
+  server_timestamp: number
+  reason: string
 }

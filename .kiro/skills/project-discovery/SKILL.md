@@ -45,6 +45,11 @@ Do NOT run for:
    - Next.js app router: map app/**/page.tsx to routes
    - Next.js pages router: map pages/**/*.tsx to routes
    - Astro: map src/pages/**/*.astro to routes
+   - For Vite SPA projects (React Router, TanStack Router):
+     Routes are NOT filesystem-discoverable.
+     Return routes: [] and set routingSource: "client-side-router".
+   - For Next.js and Astro:
+     routingSource is "filesystem".
 
 ## Output Schema
 
