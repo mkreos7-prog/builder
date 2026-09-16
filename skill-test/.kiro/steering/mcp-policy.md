@@ -25,9 +25,20 @@ Only these three servers are enabled in v1:
 |---|---|---|
 | github | Repository read/write, PR operations | WRITE |
 | playwright | Browser automation, screenshots, DOM inspect | EXECUTE |
-| fetch | HTTP requests to external APIs | READ |
+| fetch | HTTP requests to external APIs | WRITE |
 
 Adding a new built-in server requires updating this policy file first.
+
+Ceiling Enforcement:
+
+If a server exposes a tool whose mapped permission exceeds its ceiling, the following occurs at tool-discovery time:
+
+- The offending tool is hidden from the agent's available tool list.
+- The server itself is NOT rejected; only that tool is disabled.
+- A warning is written to the audit log with event type mcp.server.ceiling_exceeded, including server_name and tool_name.
+- The user is not notified — this is a builder-side safety measure.
+
+Ceilings are enforced at discovery time, not at call time. A tool that passes discovery cannot exceed its ceiling during invocation.
 
 ## Permission Mapping
 
@@ -35,10 +46,21 @@ MCP servers declare tool annotations in their manifest. These MUST be mapped to 
 
 | MCP Manifest Hint | Builder Class |
 |---|---|
-| readOnly: true | READ |
+| readOnlyHint: true | READ |
 | destructiveHint: true | DELETE |
-| idempotentHint: true + no readonly | WRITE |
+| idempotentHint: true + no readOnlyHint | WRITE |
 | (unknown / no hint) | DANGEROUS |
+
+The table above is a partial guideline. The full mapping follows a priority order — first match wins:
+
+1. destructiveHint: true                → DELETE
+2. readOnlyHint: true                   → READ
+3. Server = playwright                  → EXECUTE
+4. Server = github or fetch (write)     → WRITE
+5. idempotentHint: true (write)         → WRITE
+6. No hints + unknown server            → DANGEROUS
+
+Server-specific rules (3 and 4) come from the built-in allowlist in the "v1 Built-In Servers" section. When a new server is added to the allowlist, its default class must be specified there.
 
 Rules:
 
@@ -86,7 +108,7 @@ Rules:
 - Every MCP tool call MUST be logged with:
   - session_id, user_id, server_name, tool_name, permission_class, 
     timestamp, duration_ms, success (bool)
-- Logs are retained 30 days.
+- Logs are retained per MCP_AUDIT_RETENTION_DAYS (env var, default 30).
 - Logs never contain tool arguments or results if the tool is marked 
   DANGEROUS or DEPLOY.
 

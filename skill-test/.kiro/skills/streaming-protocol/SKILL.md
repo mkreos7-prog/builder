@@ -44,9 +44,13 @@ Event types:
 - build.start, build.progress, build.error, build.complete
 - llm.token
 - error
-- mcp.server.connecting, mcp.server.connected, mcp.server.disconnected, 
-  mcp.server.error
-- mcp.tool.discovered, mcp.tool.call, mcp.tool.result
+- mcp.server.connecting
+- mcp.server.connected
+- mcp.server.disconnected
+- mcp.server.error
+- mcp.tool.discovered
+- mcp.tool.call
+- mcp.tool.result
 
 MCP events use the same envelope. See ./schemas.ts for payloads. MCP connections are lazy — mcp.server.connecting is only emitted when a task first requires the server.
 
